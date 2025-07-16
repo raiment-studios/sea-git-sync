@@ -52,7 +52,7 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     }
     // Remove the snapshot since we have an active .git directory
     run_command("rm", &["-f", ".git-sync-snapshot.tar.gz"])?;
-    run_command("ls", &["-a", "."])?;
+    git(&["ls-files"])?;
 
     git(&["add", "."])?;
     git(&["commit", "-m", &args.message])?;
@@ -68,7 +68,7 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     }
 
     // Display the snapshot file size (since it can be abnormally large)
-    run_command("ls", &["-lh", ".git-sync-snapshot.tar.gz"])?;
+    run_command("du", &["-h", ".git-sync-snapshot.tar.gz"])?;
 
     fs::remove_dir_all(git_dir).context("Failed to clean up .git directory")?;
     Ok(())
