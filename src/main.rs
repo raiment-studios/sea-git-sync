@@ -10,7 +10,7 @@ use std::process::Command;
 
 /// CLI arguments for the sync tool
 #[derive(Parser, Debug)]
-#[command(name = "🌊 sea-git-publish")]
+#[command(name = "🌊 sea-git-sync")]
 #[command(about = "A CLI tool to sync subdirectories from monorepos to external git repositories")]
 struct Args {
     /// Remote repository URL
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let start = std::time::Instant::now();
 
     let args = Args::parse();
-    cprintln!("#39C", "🌊 [sea-git-publish](#39C) [v0.1.2](#829)");
+    cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v0.1.2](#829)");
     cprintln!("#39C", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
     if let Err(e) = sync_to_remote(&args) {
         eprintln!("Sync failed: {}", e);
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     println!();
     cprintln!(
         "#1C3",
-        "✔ Sync completed successfully! [({duration:.1})](#666)",
+        "✔ Sync completed successfully! [({duration:.1}s)](#666)",
     );
     Ok(())
 }
