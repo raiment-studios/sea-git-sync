@@ -49,11 +49,10 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     if !git_dir.exists() {
         ensure_clean_dir(git_dir)?;
         extract_snapshot(snapshot_path, git_dir)?;
-        run_command("ls", &["-la", "."])?; // Show directory contents
     }
-
     // Remove the snapshot since we have an active .git directory
     run_command("rm", &["-f", ".git-sync-snapshot.tar.gz"])?;
+    run_command("ls", &["-a", "."])?;
 
     git(&["add", "."])?;
     git(&["commit", "-m", &args.message])?;
