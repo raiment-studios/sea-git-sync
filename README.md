@@ -12,7 +12,7 @@ Currently functional but has seen limited testing, especially for non-trivial pr
 
 ## Installation
 
-**Requires**: [Rust](https://rustup.rs/) to be installed for installation.
+**Requires [Rust](https://rustup.rs/) for installation.**
 
 ```bash
 cargo install --git https://github.com/raiment-studios/sea-git-sync
