@@ -25,6 +25,8 @@ struct Args {
 const SNAPSHOT_FILE: &str = ".git-sync-snapshot.tar.gz";
 
 fn main() -> Result<()> {
+    let start = std::time::Instant::now();
+
     let args = Args::parse();
     cprintln!("#39C", "🌊 [sea-git-publish](#39C) [v0.1.2](#829)");
     cprintln!("#39C", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
@@ -32,7 +34,13 @@ fn main() -> Result<()> {
         eprintln!("Sync failed: {}", e);
         std::process::exit(1);
     }
-    cprintln!("#1C3", "✔ Sync completed successfully!");
+
+    let duration = start.elapsed().as_secs_f32();
+    println!();
+    cprintln!(
+        "#1C3",
+        "✔ Sync completed successfully! [({duration:.1})](#666)",
+    );
     Ok(())
 }
 
