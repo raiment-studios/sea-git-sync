@@ -64,7 +64,7 @@ fn sync_to_remote(args: &Args) -> Result<()> {
 
     git(&["add", "."])?;
     git(&["commit", "-m", &args.message])?;
-    git(&["pull", &args.remote, &args.branch])?;
+    git(&["pull", &args.remote, &args.branch, "--no-ff"])?;
 
     match git(&["push", &args.remote, &args.branch]) {
         Ok(_) => {
