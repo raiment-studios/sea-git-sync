@@ -23,11 +23,17 @@ cd monorepo/subdir_123/my-project
 sea-git-sync --remote git@github:yourcompany/my-project.git
 ```
 
-## Developement
+## Development
 
 ### Contributing
 
 Please feel free to file issues and open pull requests on GitHub!
+
+### How it works
+
+This is not a particularly complex program!
+
+The sync works essentially by creating and keeping a `.git-sync-snapshot.tar.gz` file _in the monorepo_ for any sync'ed folder. This is just a zip fo the `.git` folder from the last sync. But persisting the `.git` history from the prior sync, git is (more likely) able to do an automatic merge between changes that may have happened on either the local monorepo or remote project repo.
 
 ### Roadmap
 
