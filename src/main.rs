@@ -59,17 +59,10 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     git(&["commit", "-m", &args.message])?;
     git(&["pull", &args.remote, &args.branch, "--rebase"])?;
 
-    match git(&["push", &args.remote, &args.branch, "--force"]) {
+    match git(&["push", &args.remote, &args.branch]) {
         Ok(_) => {
             cprintln!("#555", "Push successful, updating snapshot...");
             git(&["gc", "--aggressive", "--prune=now"])?;
-            git(&[
-                "filter-repo",
-                "--path",
-                ".git-sync-snapshot.tar.gz",
-                "--invert-paths",
-                "--force",
-            ])?;
             create_snapshot(git_dir, snapshot_path)?;
         }
         Err(_) => eprintln!("Push failed, not updating snapshot"),
