@@ -37,6 +37,7 @@ The sync works essentially by creating and keeping a `.git-sync-snapshot.tar.gz`
 
 ### Roadmap
 
+-   [ ] Handle initial sync to an empty repo correctly
 -   [ ] Additional user testing
 -   [ ] Better user notification of how to handle failed automatic merges
 
@@ -46,7 +47,7 @@ Created in July 2025 as a Rust application based on a Bash script that was used 
 
 ## FAQ
 
-Nothing so far!
+Nothing so far...
 
 ## License
 
