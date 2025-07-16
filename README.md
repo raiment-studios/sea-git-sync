@@ -4,6 +4,8 @@ Utility for bidirectionally syncing a monorepo folder to a remote git repository
 
 This can be useful for working in a private monorepo and publishing an individual project to a public repo. The syncing is bidirectional which means that the public repo can accept merge requests and these will be pulled back into the monorepo. In the case of errors or merge conflicts, the syncing is all done with standard `git` commands so the user is able to resolve complex situations manually.
 
+![alt text](image.png)
+
 ## Status
 
 Currently functional but has seen limited testing, especially for non-trivial projects. Please use with caution in production. Contributions welcome to address limitations.
