@@ -26,8 +26,8 @@ const SNAPSHOT_FILE: &str = ".git-sync-snapshot.tar.gz";
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    cprintln!("#555", "🌊 [sea-git-publish](#39C) [v0.1.2](#829)");
-    cprintln!("#555", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
+    cprintln!("#CFC", "🌊 [sea-git-publish](#39C) [v0.1.2](#829)");
+    cprintln!("#CFC", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
     if let Err(e) = sync_to_remote(&args) {
         eprintln!("Sync failed: {}", e);
         std::process::exit(1);
@@ -39,11 +39,11 @@ fn main() -> Result<()> {
 fn sync_to_remote(args: &Args) -> Result<()> {
     let snapshot_path = Path::new(SNAPSHOT_FILE);
     if !snapshot_path.exists() {
-        cprintln!("#555", "No snapshot found, creating initial clone...");
+        cprintln!("#CFC", "No snapshot found, creating initial clone...");
         create_initial_snapshot(&args.remote)?;
     }
 
-    cprintln!("#555", "Syncing changes to remote repository...");
+    cprintln!("#CFC", "Syncing changes to remote repository...");
 
     let git_dir = Path::new(".git");
     if !git_dir.exists() {
@@ -60,7 +60,7 @@ fn sync_to_remote(args: &Args) -> Result<()> {
 
     match git(&["push", &args.remote, &args.branch]) {
         Ok(_) => {
-            cprintln!("#555", "Push successful, updating snapshot...");
+            cprintln!("#CFC", "Push successful, updating snapshot...");
             git(&["gc", "--aggressive", "--prune=now"])?;
             create_snapshot(git_dir, snapshot_path)?;
         }
