@@ -1,5 +1,3 @@
-//mod cprintln;
-
 use anyhow::{Context, Result};
 use clap::Parser;
 use snowfall_core::prelude::cprintln;
@@ -79,6 +77,9 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     if args.copy_symlinks {
         cprintln!("#39C", "Copying symlinks as files...");
         replaced_symlinks = copy_symlinks();
+        for rep in &replaced_symlinks {
+            git(&["add", "--force", rep.symlink_path.to_str().unwrap()])?;
+        }
     }
 
     git(&["add", "."])?;
