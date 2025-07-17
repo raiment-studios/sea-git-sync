@@ -176,9 +176,13 @@ fn copy_symlinks() -> Vec<SymlinkReplacement> {
 /// Undo the symlink replacements, restoring the original symlinks
 fn undo_symlink_replacements(replacements: Vec<SymlinkReplacement>) {
     for rep in replacements {
-        // Remove the copied directory
         let _ = fs::remove_dir_all(&rep.symlink_path);
-        // Restore the symlink
+        cprintln!(
+            "#555",
+            "{:#?} -> {}",
+            rep.symlink_path,
+            rep.target.display()
+        );
         let _ = std::os::unix::fs::symlink(&rep.target, &rep.symlink_path);
     }
 }
