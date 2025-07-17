@@ -153,6 +153,7 @@ fn copy_symlinks() -> Vec<SymlinkReplacement> {
                         target: abs_target,
                         was_dir: true,
                     });
+                    cprintln!("#555", "{}", entry_path.display());
                     visit_and_replace_symlinks(&entry_path, replaced, visited);
                 }
                 continue;
@@ -190,12 +191,7 @@ fn copy_symlinks() -> Vec<SymlinkReplacement> {
 fn undo_symlink_replacements(replacements: Vec<SymlinkReplacement>) {
     for rep in replacements {
         let _ = fs::remove_dir_all(&rep.symlink_path);
-        cprintln!(
-            "#555",
-            "{:#?} -> {}",
-            rep.symlink_path,
-            rep.target.display()
-        );
+        cprintln!("#555", "{}", rep.symlink_path.display());
         let _ = std::os::unix::fs::symlink(&rep.target, &rep.symlink_path);
     }
 }
