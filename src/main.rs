@@ -40,7 +40,7 @@ fn main() -> Result<()> {
         .unwrap_or("unknown");
 
     let args = Args::parse();
-    cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v{}](#829)", version);
+    cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v{}](#B4F)", version);
     cprintln!("#39C", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
     if let Err(e) = sync_to_remote(&args) {
         eprintln!("Sync failed: {}", e);
