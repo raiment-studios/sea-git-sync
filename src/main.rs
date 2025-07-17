@@ -1,7 +1,8 @@
-mod cprintln;
+//mod cprintln;
 
 use anyhow::{Context, Result};
 use clap::Parser;
+use snowfall_core::prelude::cprintln;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::read_link;
