@@ -111,42 +111,55 @@ fn copy_symlinks() -> Vec<SymlinkReplacement> {
         replaced: &mut Vec<SymlinkReplacement>,
         visited: &mut HashSet<std::path::PathBuf>,
     ) {
-        if let Ok(entries) = fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let entry_path = entry.path();
-                if visited.contains(&entry_path) {
-                    continue;
+        let entries = match fs::read_dir(path) {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        for entry in entries.flatten() {
+            let entry_path = entry.path();
+            if !visited.insert(entry_path.clone()) {
+                continue;
+            }
+
+            let metadata = match entry.metadata() {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+
+            if metadata.file_type().is_symlink() {
+                let target = match read_link(&entry_path) {
+                    Ok(t) => t,
+                    Err(_) => continue,
+                };
+
+                let abs_target = if target.is_absolute() {
+                    target.clone()
+                } else {
+                    entry_path.parent().unwrap_or(Path::new(".")).join(&target)
+                };
+
+                let target_meta = match fs::metadata(&abs_target) {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+
+                if target_meta.is_dir() {
+                    let _ = fs::remove_file(&entry_path);
+                    let _ = copy_dir_all(&abs_target, &entry_path);
+                    let abs_target = abs_target.canonicalize().unwrap_or(abs_target);
+                    replaced.push(SymlinkReplacement {
+                        symlink_path: entry_path.clone(),
+                        target: abs_target,
+                        was_dir: true,
+                    });
+                    visit_and_replace_symlinks(&entry_path, replaced, visited);
                 }
-                visited.insert(entry_path.clone());
-                if let Ok(metadata) = entry.metadata() {
-                    if metadata.file_type().is_symlink() {
-                        if let Ok(target) = read_link(&entry_path) {
-                            // Check if the symlink points to a directory
-                            let abs_target = if target.is_absolute() {
-                                target.clone()
-                            } else {
-                                entry_path.parent().unwrap_or(Path::new(".")).join(&target)
-                            };
-                            if let Ok(target_meta) = fs::metadata(&abs_target) {
-                                if target_meta.is_dir() {
-                                    // Remove the symlink
-                                    let _ = fs::remove_file(&entry_path);
-                                    // Recursively copy the directory
-                                    let _ = copy_dir_all(&abs_target, &entry_path);
-                                    replaced.push(SymlinkReplacement {
-                                        symlink_path: entry_path.clone(),
-                                        target: abs_target,
-                                        was_dir: true,
-                                    });
-                                    // Continue visiting inside the copied directory
-                                    visit_and_replace_symlinks(&entry_path, replaced, visited);
-                                }
-                            }
-                        }
-                    } else if metadata.is_dir() {
-                        visit_and_replace_symlinks(&entry_path, replaced, visited);
-                    }
-                }
+                continue;
+            }
+
+            if metadata.is_dir() {
+                visit_and_replace_symlinks(&entry_path, replaced, visited);
             }
         }
     }
