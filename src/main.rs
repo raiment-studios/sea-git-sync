@@ -41,7 +41,7 @@ fn main() -> Result<()> {
 
     let args = Args::parse();
     cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v{}](#B4F)", version);
-    cprintln!("#39C", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
+    cprintln!("#39C", "{}", "[~](#39F)[~](#CCC)".repeat(32));
     if let Err(e) = sync_to_remote(&args) {
         eprintln!("Sync failed: {}", e);
         std::process::exit(1);
