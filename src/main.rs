@@ -21,7 +21,7 @@ struct Args {
     #[arg(long, default_value = "Sync changes")]
     message: String,
     /// Copy symlinks as files instead of links
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = true)]
     copy_symlinks: bool,
 }
 
@@ -30,8 +30,17 @@ const SNAPSHOT_FILE: &str = ".git-sync-snapshot.tar.gz";
 fn main() -> Result<()> {
     let start = std::time::Instant::now();
 
+    let cargo_toml = include_str!("../Cargo.toml");
+    let cargo_toml: toml::Value =
+        toml::from_str(cargo_toml).context("Failed to parse Cargo.toml")?;
+    let version = cargo_toml
+        .get("package")
+        .and_then(|pkg| pkg.get("version"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+
     let args = Args::parse();
-    cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v0.1.2](#829)");
+    cprintln!("#39C", "🌊 [sea-git-sync](#39C) [v{}](#829)", version);
     cprintln!("#39C", "{}", "[~](#CCF)[~](#CCC)".repeat(32));
     if let Err(e) = sync_to_remote(&args) {
         eprintln!("Sync failed: {}", e);
