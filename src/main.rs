@@ -2,9 +2,9 @@ mod cprintln;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use cprintln::*;
+use std::collections::HashSet;
 use std::fs;
-use std::iter::repeat;
+use std::fs::read_link;
 use std::path::Path;
 use std::process::Command;
 
@@ -20,6 +20,9 @@ struct Args {
     branch: String,
     #[arg(long, default_value = "Sync changes")]
     message: String,
+    /// Copy symlinks as files instead of links
+    #[arg(long, default_value_t = false)]
+    copy_symlinks: bool,
 }
 
 const SNAPSHOT_FILE: &str = ".git-sync-snapshot.tar.gz";
@@ -62,6 +65,12 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     run_command("rm", &["-f", ".git-sync-snapshot.tar.gz"])?;
     git(&["ls-files"])?;
 
+    let mut replaced_symlinks = Vec::new();
+    if args.copy_symlinks {
+        cprintln!("#39C", "Copying symlinks as files...");
+        replaced_symlinks = copy_symlinks();
+    }
+
     git(&["add", "."])?;
     git(&["commit", "-m", &args.message])?;
     git(&["pull", &args.remote, &args.branch, "--no-ff"])?;
@@ -78,8 +87,100 @@ fn sync_to_remote(args: &Args) -> Result<()> {
     // Display the snapshot file size (since it can be abnormally large)
     run_command("du", &["-h", ".git-sync-snapshot.tar.gz"])?;
 
+    if !replaced_symlinks.is_empty() {
+        cprintln!("#39C", "Restoring original symlinks...");
+        undo_symlink_replacements(replaced_symlinks);
+    }
+
     fs::remove_dir_all(git_dir).context("Failed to clean up .git directory")?;
     Ok(())
+}
+
+/// Struct to track replaced symlinks for undoing changes
+#[derive(Debug)]
+struct SymlinkReplacement {
+    symlink_path: std::path::PathBuf,
+    target: std::path::PathBuf,
+    was_dir: bool,
+}
+
+/// Replace symlinks with their target directories, returning info for undoing changes
+fn copy_symlinks() -> Vec<SymlinkReplacement> {
+    fn visit_and_replace_symlinks(
+        path: &Path,
+        replaced: &mut Vec<SymlinkReplacement>,
+        visited: &mut HashSet<std::path::PathBuf>,
+    ) {
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if visited.contains(&entry_path) {
+                    continue;
+                }
+                visited.insert(entry_path.clone());
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.file_type().is_symlink() {
+                        if let Ok(target) = read_link(&entry_path) {
+                            // Check if the symlink points to a directory
+                            let abs_target = if target.is_absolute() {
+                                target.clone()
+                            } else {
+                                entry_path.parent().unwrap_or(Path::new(".")).join(&target)
+                            };
+                            if let Ok(target_meta) = fs::metadata(&abs_target) {
+                                if target_meta.is_dir() {
+                                    // Remove the symlink
+                                    let _ = fs::remove_file(&entry_path);
+                                    // Recursively copy the directory
+                                    let _ = copy_dir_all(&abs_target, &entry_path);
+                                    replaced.push(SymlinkReplacement {
+                                        symlink_path: entry_path.clone(),
+                                        target: abs_target,
+                                        was_dir: true,
+                                    });
+                                    // Continue visiting inside the copied directory
+                                    visit_and_replace_symlinks(&entry_path, replaced, visited);
+                                }
+                            }
+                        }
+                    } else if metadata.is_dir() {
+                        visit_and_replace_symlinks(&entry_path, replaced, visited);
+                    }
+                }
+            }
+        }
+    }
+
+    fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+        fs::create_dir_all(dst)?;
+        for entry in fs::read_dir(src)? {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+            let src_path = entry.path();
+            let dst_path = dst.join(entry.file_name());
+            if file_type.is_dir() {
+                copy_dir_all(&src_path, &dst_path)?;
+            } else if file_type.is_file() {
+                fs::copy(&src_path, &dst_path)?;
+            }
+        }
+        Ok(())
+    }
+
+    let mut replaced = Vec::new();
+    let mut visited = HashSet::new();
+    visit_and_replace_symlinks(Path::new("."), &mut replaced, &mut visited);
+    replaced
+}
+
+/// Undo the symlink replacements, restoring the original symlinks
+fn undo_symlink_replacements(replacements: Vec<SymlinkReplacement>) {
+    for rep in replacements {
+        // Remove the copied directory
+        let _ = fs::remove_dir_all(&rep.symlink_path);
+        // Restore the symlink
+        let _ = std::os::unix::fs::symlink(&rep.target, &rep.symlink_path);
+    }
 }
 
 /// Create initial snapshot by cloning the remote repository
